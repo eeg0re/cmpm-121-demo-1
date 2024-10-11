@@ -14,10 +14,6 @@ app.append(header);
 // change the document color
 document.body.style.backgroundColor = "#8760a3";
 
-//---------------------- DEBUG TOGGLE ------------------------
-const DEBUG: boolean = false;
-// -----------------------------------------------------------
-
 // adding a button
 const clicker = document.createElement("button");
 clicker.innerHTML = "🐈";
@@ -32,9 +28,12 @@ clicker.style.boxShadow = "5px 5px 15px rgba(0, 0, 0, 0.3)";
 
 // make a variable to store the number of clicks we get
 let counter: number = 0;
+//---------------------- DEBUG TOGGLE ------------------------
+const DEBUG: boolean = false;
 if (DEBUG) {
-  counter = 1000;
+  counter = 10000;
 }
+// -----------------------------------------------------------
 
 const game_message = document.createElement("div");
 game_message.style.fontSize = "25px";
@@ -58,6 +57,46 @@ function DisplayPets() {
 }
 // check for button clicks on kitty
 clicker.addEventListener("click", IncreaseClickCounter);
+
+// define the colors to switch between when we activate catnip 
+const colorSequence: Array<[number, number, number]> = [
+  [96, 74, 112],
+  [103, 150, 199],
+  [19, 128, 30],
+  [237, 190, 21],
+  [237, 190, 21],
+  [191, 25, 114]
+];
+
+// --------- functions that'll switch colors for our fun catnip upgrade ----------------
+//              The base of these 2 functions are provided from Brace
+function interpolateColors(start: [number, number, number], end: [number, number, number], steps: number, step: number): string {
+  const r = Math.round(start[0] + ((end[0] - start[0]) / steps) * step);
+  const g = Math.round(start[1] + ((end[1] - start[1]) / steps) * step);
+  const b = Math.round(start[2] + ((end[2] - start[2]) / steps) * step);
+  return `rgb(${r}, ${g}, ${b})`;
+} 
+// 
+function ActivateCatnip(interval: number, steps: number, colors: Array<[number, number, number]>) {
+  let stepCount = 0;
+  let currentColor = 0;
+  setInterval(() => {
+      if (currentColor < colors.length - 1) {
+          const gradientColor = interpolateColors(colors[currentColor], colors[currentColor + 1], steps, stepCount);
+          clicker.style.backgroundColor = gradientColor;
+          stepCount++;
+          
+          if (stepCount > steps) {
+              stepCount = 0;
+              currentColor++;
+          }
+      } else {
+          currentColor = 0;
+          stepCount = 0;
+      }
+  }, interval);
+}
+// --------------------------------------------------------------------------------------
 
 // -------------------------------- Upgrades & their functions ------------------------------------------------
 // step is the recursive function called by requestAnimationFrame, allows us to do our time math
@@ -127,6 +166,7 @@ function makeToolTip(button: HTMLButtonElement, buttonInfo: UpgradeButton) {
 function makeUpgrade(attrs: UpgradeButton) {
   const button = document.createElement("button");
   button.innerHTML = attrs.label;
+  button.style.backgroundColor = '#4b345c'
   makeToolTip(button, attrs); // make a tooltip for this instance of a button
   if (!attrs.active) {
     button.disabled = true;
@@ -161,6 +201,9 @@ function ActivateUpgrade(button: HTMLButtonElement, buttonInfo: UpgradeButton) {
   if (counter >= buttonInfo.cost) {
     counter -= buttonInfo.cost;
     buttonInfo.active = true;
+    if(buttonInfo.label == "Catnip" && buttonInfo.firstPurchase){
+      ActivateCatnip(10, 100, colorSequence);
+    }
     buttonInfo.firstPurchase = false;
     buttonInfo.timesBought += 1;
     buttonInfo.cost *= 1.15; // increase the cost by a little bit
@@ -177,8 +220,9 @@ function ActivateUpgrade(button: HTMLButtonElement, buttonInfo: UpgradeButton) {
 
 // make the upgrades a part of the list by default
 const upgradeList: UpgradeButton[] = [
-  // first upgrade, cost 10 pets, produces 0.1 pets/sec
-  { label: "Kitty Petter 1000",
+  // cost 10 pets, produces 0.1 pets/sec
+  {
+    label: "Kitty Petter 1000",
     firstPurchase: true,
     cost: 10,
     growthRate: 0.1,
@@ -186,9 +230,10 @@ const upgradeList: UpgradeButton[] = [
     timesBought: 0,
     message:
       "A machine that pets a kitty for you. It doesn't work very fast but if you buy enough of them your cat will be happy.",
-  }, 
-  // second upgrade, cost 100 pets, produces 2 pets/sec
-  { label: "Xtra Arms",
+  },
+  // cost 100 pets, produces 2 pets/sec
+  {
+    label: "Xtra Arms",
     firstPurchase: true,
     cost: 100,
     growthRate: 2.0,
@@ -196,20 +241,53 @@ const upgradeList: UpgradeButton[] = [
     timesBought: 0,
     message:
       "An extra set of arms that keeps petting cats even when you have other things to do.",
-    },
-    // third upgrade, cost 100 pets, produces 50 pets/sec
-    { label: "Kitty Companion",
+  },
+    // cost 50, 5 pets per sec
+    {
+      label: "Kitty Petter 5000",
       firstPurchase: true,
-      cost: 1000,
-      growthRate: 50.0,
+      cost: 500,
+      growthRate: 10.0,
       active: false,
       timesBought: 0,
-      message: "A robot that stays by a cat's side and offers endless pets.",
-    }
+      message:
+        "The stronger, better, faster version of the KP-1000. Pet kitties like never before with this must-have device."
+    },
+  // cost 100 pets, produces 50 pets/sec
+  {
+    label: "Cat Companion",
+    firstPurchase: true,
+    cost: 1000,
+    growthRate: 50.0,
+    active: false,
+    timesBought: 0,
+    message: "A robot that stays by a cat's side and offers endless pets. It doesn't have hands so nobody really knows how it works.",
+  },
+  // cost 5000 pets, produce 100 pets/sec
+  {
+    label: "Cardboard Box",
+    firstPurchase: true,
+    cost: 5000,
+    growthRate: 100.0,
+    active: false,
+    timesBought: 0,
+    message: "You should probably throw this out but cats love it.",
+  },
+  // cost 10,000
+  {
+    label: "Catnip",
+    firstPurchase: true,
+    cost: 10000,
+    growthRate: 200.0,
+    active: false,
+    timesBought: 0,
+    message: "I don't know if you should give that to the cat.",
+  }
 ];
 
-function createUpgradesFromList(upgrades: UpgradeButton[]){
-  for(let i = 0; i < upgrades.length; i++){
+// function that loops through all of our upgrades and initializes them
+function createUpgradesFromList(upgrades: UpgradeButton[]) {
+  for (let i = 0; i < upgrades.length; i++) {
     makeUpgrade(upgrades[i]);
   }
 }
