@@ -11,8 +11,12 @@ const header = document.createElement("h1");
 header.innerHTML = gameName;
 app.append(header);
 
+const mainButtonColor:string = "#604a70";
+const upgradeButtonColor:string = "#4b345c";
+const documentColor:string = "#8760a3";
+
 // change the document color
-document.body.style.backgroundColor = "#8760a3";
+document.body.style.backgroundColor = documentColor;
 
 // adding a button
 const clicker = document.createElement("button");
@@ -22,16 +26,17 @@ app.append(clicker);
 clicker.style.width = "200px";
 clicker.style.height = "200px";
 clicker.style.fontSize = "60px";
-clicker.style.backgroundColor = "#604a70";
+clicker.style.backgroundColor = mainButtonColor;
 clicker.style.borderRadius = "50%";
 clicker.style.boxShadow = "5px 5px 15px rgba(0, 0, 0, 0.3)";
+
 
 // make a variable to store the number of clicks we get
 let counter: number = 0;
 //---------------------- DEBUG TOGGLE ------------------------
-const DEBUG: boolean = false;
+const DEBUG: boolean = true;
 if (DEBUG) {
-  counter = 10000;
+  counter = 100;
 }
 // -----------------------------------------------------------
 
@@ -63,14 +68,24 @@ function ActivateCatnip(
   let stepCount = 0;
   let currentColor = 0;
   setInterval(() => {
-    const {currColor, numSteps} = handleColorTransition(colors, currentColor, stepCount, steps);
+    const { currColor, numSteps } = handleColorTransition(
+      colors,
+      currentColor,
+      stepCount,
+      steps,
+    );
     currentColor = currColor;
-    stepCount = numSteps; 
+    stepCount = numSteps;
   }, interval);
 }
 // --------------------------------------------------------------------------------------
 
-function handleColorTransition(colorList: Array<[number, number, number]>, currColor: number, numSteps: number, steps: number){
+function handleColorTransition(
+  colorList: Array<[number, number, number]>,
+  currColor: number,
+  numSteps: number,
+  steps: number,
+) {
   if (currColor < colorList.length - 1) {
     const gradientColor = interpolateColors(
       colorList[currColor],
@@ -89,7 +104,7 @@ function handleColorTransition(colorList: Array<[number, number, number]>, currC
     currColor = 0;
     numSteps = 0;
   }
-  return {currColor, numSteps};
+  return { currColor, numSteps };
 }
 // generalized tooltip interface so we can have fun messages for each button
 function makeToolTip(button: HTMLButtonElement, buttonInfo: UpgradeButton) {
@@ -124,7 +139,7 @@ function makeToolTip(button: HTMLButtonElement, buttonInfo: UpgradeButton) {
 function makeUpgrade(attrs: UpgradeButton) {
   const button = document.createElement("button");
   button.innerHTML = attrs.label;
-  button.style.backgroundColor = "#4b345c";
+  button.style.backgroundColor = upgradeButtonColor;
   makeToolTip(button, attrs); // make a tooltip for this instance of a button
   if (!attrs.active) {
     button.disabled = true;
@@ -144,27 +159,33 @@ function makeUpgrade(attrs: UpgradeButton) {
 }
 
 // function checks if player has enough to buy the current button and changes button state
-function CheckFunds(button: HTMLButtonElement, buttonInfo: UpgradeButton) {
+function CheckFunds(button: HTMLButtonElement, buttonInfo: UpgradeButton): boolean {
   if (counter >= buttonInfo.cost) {
     button.disabled = false; // actually changes button status
     buttonInfo.active = true; // tracks button status in the interface
+    return true;
   } else {
     button.disabled = true;
     buttonInfo.active = false;
+    return false;
   }
 }
 
+const GRADIENT_INTERVAL = 10;
+const GRADIENT_STEP = 100;
+let totalPetRate = 0; 
 // function that will activate an upgrade if
 function ActivateUpgrade(button: HTMLButtonElement, buttonInfo: UpgradeButton) {
-  if (counter >= buttonInfo.cost) {
+  if (CheckFunds(button, buttonInfo)) {
     counter -= buttonInfo.cost;
-    buttonInfo.active = true;
+    // buttonInfo.active = true;
     if (buttonInfo.label == "Catnip" && buttonInfo.firstPurchase) {
-      ActivateCatnip(10, 100, colorSequence);
+      ActivateCatnip(GRADIENT_INTERVAL, GRADIENT_STEP, colorSequence);
     }
     buttonInfo.firstPurchase = false;
     buttonInfo.timesBought += 1;
     buttonInfo.cost *= 1.15; // increase the cost by a little bit
+    totalPetRate += buttonInfo.growthRate;
     DisplayStats();
     makeToolTip(button, buttonInfo);
   }
@@ -235,7 +256,7 @@ function step(timestamp: number, buttonInfo: UpgradeButton) {
 
   // time is in milliseconds, so we divide elapsed by 1000 to get the correct unit
   const increment =
-    (elapsed / 1000) * buttonInfo.growthRate * buttonInfo.timesBought; // multiply the increment by this item's growth rate and the number of that item
+    (elapsed / 1000) * totalPetRate; // multiply the increment by this item's growth rate and the number of that item
   counter += increment; // add increment to counter
   DisplayPets(); // update the display with current number of pets
 
