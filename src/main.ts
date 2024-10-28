@@ -11,9 +11,9 @@ const header = document.createElement("h1");
 header.innerHTML = gameName;
 app.append(header);
 
-const mainButtonColor:string = "#604a70";
-const upgradeButtonColor:string = "#4b345c";
-const documentColor:string = "#8760a3";
+const mainButtonColor: string = "#604a70";
+const upgradeButtonColor: string = "#4b345c";
+const documentColor: string = "#8760a3";
 
 // change the document color
 document.body.style.backgroundColor = documentColor;
@@ -30,13 +30,12 @@ clicker.style.backgroundColor = mainButtonColor;
 clicker.style.borderRadius = "50%";
 clicker.style.boxShadow = "5px 5px 15px rgba(0, 0, 0, 0.3)";
 
-
 // make a variable to store the number of clicks we get
 let counter: number = 0;
 //---------------------- DEBUG TOGGLE ------------------------
-const DEBUG: boolean = true;
+const DEBUG: boolean = false;
 if (DEBUG) {
-  counter = 100;
+  counter = 100000;
 }
 // -----------------------------------------------------------
 
@@ -68,7 +67,7 @@ function ActivateCatnip(
   let stepCount = 0;
   let currentColor = 0;
   setInterval(() => {
-    const { currColor, numSteps } = handleColorTransition(
+    const { currColor, numSteps } = HandleColorTransition(
       colors,
       currentColor,
       stepCount,
@@ -80,7 +79,7 @@ function ActivateCatnip(
 }
 // --------------------------------------------------------------------------------------
 
-function handleColorTransition(
+function HandleColorTransition(
   colorList: Array<[number, number, number]>,
   currColor: number,
   numSteps: number,
@@ -159,7 +158,10 @@ function makeUpgrade(attrs: UpgradeButton) {
 }
 
 // function checks if player has enough to buy the current button and changes button state
-function CheckFunds(button: HTMLButtonElement, buttonInfo: UpgradeButton): boolean {
+function CheckFunds(
+  button: HTMLButtonElement,
+  buttonInfo: UpgradeButton,
+): boolean {
   if (counter >= buttonInfo.cost) {
     button.disabled = false; // actually changes button status
     buttonInfo.active = true; // tracks button status in the interface
@@ -173,7 +175,7 @@ function CheckFunds(button: HTMLButtonElement, buttonInfo: UpgradeButton): boole
 
 const GRADIENT_INTERVAL = 10;
 const GRADIENT_STEP = 100;
-let totalPetRate = 0; 
+let totalPetRate = 0;
 // function that will activate an upgrade if
 function ActivateUpgrade(button: HTMLButtonElement, buttonInfo: UpgradeButton) {
   if (CheckFunds(button, buttonInfo)) {
@@ -255,8 +257,7 @@ function step(timestamp: number, buttonInfo: UpgradeButton) {
   prevTime = timestamp; // record this time for the next time we do math
 
   // time is in milliseconds, so we divide elapsed by 1000 to get the correct unit
-  const increment =
-    (elapsed / 1000) * totalPetRate; // multiply the increment by this item's growth rate and the number of that item
+  const increment = (elapsed / 1000) * totalPetRate; // multiply the increment by this item's growth rate and the number of that item
   counter += increment; // add increment to counter
   DisplayPets(); // update the display with current number of pets
 
