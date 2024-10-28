@@ -63,28 +63,34 @@ function ActivateCatnip(
   let stepCount = 0;
   let currentColor = 0;
   setInterval(() => {
-    if (currentColor < colors.length - 1) {
-      const gradientColor = interpolateColors(
-        colors[currentColor],
-        colors[currentColor + 1],
-        steps,
-        stepCount,
-      );
-      clicker.style.backgroundColor = gradientColor;
-      stepCount++;
-
-      if (stepCount > steps) {
-        stepCount = 0;
-        currentColor++;
-      }
-    } else {
-      currentColor = 0;
-      stepCount = 0;
-    }
+    const {currColor, numSteps} = handleColorTransition(colors, currentColor, stepCount, steps);
+    currentColor = currColor;
+    stepCount = numSteps; 
   }, interval);
 }
 // --------------------------------------------------------------------------------------
 
+function handleColorTransition(colorList: Array<[number, number, number]>, currColor: number, numSteps: number, steps: number){
+  if (currColor < colorList.length - 1) {
+    const gradientColor = interpolateColors(
+      colorList[currColor],
+      colorList[currColor + 1],
+      steps,
+      numSteps,
+    );
+    clicker.style.backgroundColor = gradientColor;
+    numSteps++;
+
+    if (numSteps > steps) {
+      numSteps = 0;
+      currColor++;
+    }
+  } else {
+    currColor = 0;
+    numSteps = 0;
+  }
+  return {currColor, numSteps};
+}
 // generalized tooltip interface so we can have fun messages for each button
 function makeToolTip(button: HTMLButtonElement, buttonInfo: UpgradeButton) {
   const tooltip = document.createElement("div");
@@ -203,7 +209,6 @@ game_message.style.fontSize = "25px";
 DisplayPets();
 app.append(game_message);
 
-
 // check for button clicks on kitty
 clicker.addEventListener("click", IncreaseClickCounter);
 
@@ -318,7 +323,6 @@ const upgradeList: UpgradeButton[] = [
     message: "I don't know if you should give that to the cat.",
   },
 ];
-
 
 createUpgradesFromList(upgradeList);
 
