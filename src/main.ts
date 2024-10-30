@@ -10,6 +10,8 @@ document.title = gameName;
 const header = document.createElement("h1");
 header.innerHTML = gameName;
 app.append(header);
+// animation inspired by https://github.com/rozy-dixon/cmpm-121-demo-1/tree/main 
+header.classList.add("waveTitle"); 
 
 const mainButtonColor: string = "#604a70";
 const upgradeButtonColor: string = "#4b345c";
@@ -29,9 +31,10 @@ clicker.style.fontSize = "60px";
 clicker.style.backgroundColor = mainButtonColor;
 clicker.style.borderRadius = "50%";
 clicker.style.boxShadow = "5px 5px 15px rgba(0, 0, 0, 0.3)";
+clicker.addEventListener("click", IncreaseClickCounter);
 
-// make a variable to store the number of clicks we get
 let counter: number = 0;
+
 //---------------------- DEBUG TOGGLE ------------------------
 const DEBUG: boolean = false;
 if (DEBUG) {
@@ -105,7 +108,7 @@ function HandleColorTransition(
   }
   return { currColor, numSteps };
 }
-// generalized tooltip interface so we can have fun messages for each button
+
 function makeToolTip(button: HTMLButtonElement, buttonInfo: UpgradeButton) {
   const tooltip = document.createElement("div");
   tooltip.textContent =
@@ -134,7 +137,8 @@ function makeToolTip(button: HTMLButtonElement, buttonInfo: UpgradeButton) {
   return tooltip;
 }
 
-// function that makes upgrades
+const buttonsHTML: HTMLButtonElement[] = [];
+
 function makeUpgrade(attrs: UpgradeButton) {
   const button = document.createElement("button");
   button.innerHTML = attrs.label;
@@ -146,14 +150,7 @@ function makeUpgrade(attrs: UpgradeButton) {
   button.addEventListener("click", () => {
     ActivateUpgrade(button, attrs);
   });
-  button.addEventListener("mouseover", () => {
-    CheckFunds(button, attrs);
-  });
-  // check player funds each time they mouse over or leave the button
-  button.addEventListener("mouseout", () => {
-    CheckFunds(button, attrs);
-  });
-
+  buttonsHTML.push(button);
   app.append(button);
 }
 
@@ -176,11 +173,10 @@ function CheckFunds(
 const GRADIENT_INTERVAL = 10;
 const GRADIENT_STEP = 100;
 let totalPetRate = 0;
-// function that will activate an upgrade if
+
 function ActivateUpgrade(button: HTMLButtonElement, buttonInfo: UpgradeButton) {
   if (CheckFunds(button, buttonInfo)) {
     counter -= buttonInfo.cost;
-    // buttonInfo.active = true;
     if (buttonInfo.label == "Catnip" && buttonInfo.firstPurchase) {
       ActivateCatnip(GRADIENT_INTERVAL, GRADIENT_STEP, colorSequence);
     }
@@ -191,7 +187,6 @@ function ActivateUpgrade(button: HTMLButtonElement, buttonInfo: UpgradeButton) {
     DisplayStats();
     makeToolTip(button, buttonInfo);
   }
-  // bool used to actually  the auto-clicker
   if (buttonInfo.active) {
     requestAnimationFrame(function (timestamp: number) {
       step(timestamp, buttonInfo);
@@ -207,23 +202,24 @@ function createUpgradesFromList(upgrades: UpgradeButton[]) {
 
 function DisplayStats() {
   stats.innerHTML = "";
-  let petRate = 0;
   for (let i = 0; i < upgradeList.length; i++) {
     stats.innerHTML +=
       "[ " + upgradeList[i].label + ": " + upgradeList[i].timesBought + " ]\n";
-    if (upgradeList[i].active) {
-      petRate += upgradeList[i].growthRate * upgradeList[i].timesBought;
-    }
   }
-  stats.innerHTML += "\nPets per second: " + petRate.toFixed(1);
+  stats.innerHTML += "\nPets per second: " + totalPetRate.toFixed(1);
 }
 
 function IncreaseClickCounter(this: HTMLButtonElement) {
-  // increase the counting vairable
   counter++;
-  // display the updated message
   DisplayPets();
   return;
+}
+
+function CheckAllUpgradePrices(){
+  // this helper function inspired from: https://github.com/scso-ucsc/Incremental-Game-Development/blob/main/src/main.ts#L412
+  for(let i = 0; i < upgradeList.length; i++){
+    CheckFunds(buttonsHTML[i], upgradeList[i]);
+  }
 }
 
 const game_message = document.createElement("div");
@@ -232,8 +228,6 @@ game_message.style.fontSize = "25px";
 DisplayPets();
 app.append(game_message);
 
-// check for button clicks on kitty
-clicker.addEventListener("click", IncreaseClickCounter);
 
 // define the colors to switch between when we activate catnip
 const colorSequence: Array<[number, number, number]> = [
@@ -253,8 +247,8 @@ function step(timestamp: number, buttonInfo: UpgradeButton) {
     startTime = timestamp;
     prevTime = startTime;
   }
-  const elapsed = timestamp - prevTime; // store the elapsed time by subtracting the current time from the last time we recorded
-  prevTime = timestamp; // record this time for the next time we do math
+  const elapsed = timestamp - prevTime; 
+  prevTime = timestamp; 
 
   // time is in milliseconds, so we divide elapsed by 1000 to get the correct unit
   const increment = (elapsed / 1000) * totalPetRate; // multiply the increment by this item's growth rate and the number of that item
@@ -278,9 +272,7 @@ interface UpgradeButton {
   message: string;
 }
 
-// make the upgrades a part of the list by default
 const upgradeList: UpgradeButton[] = [
-  // cost 10 pets, produces 0.1 pets/sec
   {
     label: "Kitty Petter 1000",
     firstPurchase: true,
@@ -291,7 +283,6 @@ const upgradeList: UpgradeButton[] = [
     message:
       "A machine that pets a kitty for you. It doesn't work very fast but if you buy enough of them your cat will be happy.",
   },
-  // cost 100 pets, produces 2 pets/sec
   {
     label: "Xtra Arms",
     firstPurchase: true,
@@ -302,7 +293,6 @@ const upgradeList: UpgradeButton[] = [
     message:
       "An extra set of arms that keeps petting cats even when you have other things to do.",
   },
-  // cost 50, 5 pets per sec
   {
     label: "Kitty Petter 5000",
     firstPurchase: true,
@@ -313,7 +303,6 @@ const upgradeList: UpgradeButton[] = [
     message:
       "The stronger, better, faster version of the KP-1000. Pet kitties like never before with this must-have device.",
   },
-  // cost 100 pets, produces 50 pets/sec
   {
     label: "Cat Companion",
     firstPurchase: true,
@@ -324,7 +313,6 @@ const upgradeList: UpgradeButton[] = [
     message:
       "A robot that stays by a cat's side and offers endless pets. It doesn't have hands so nobody really knows how it works.",
   },
-  // cost 5000 pets, produce 100 pets/sec
   {
     label: "Cardboard Box",
     firstPurchase: true,
@@ -334,7 +322,6 @@ const upgradeList: UpgradeButton[] = [
     timesBought: 0,
     message: "You should probably throw this out but cats love it.",
   },
-  // cost 10,000
   {
     label: "Catnip",
     firstPurchase: true,
@@ -351,5 +338,9 @@ createUpgradesFromList(upgradeList);
 // display how many upgrades we have and what our growth rate is
 const stats = document.createElement("div");
 app.append(stats);
+
+// ------------------- this code inspired from: https://github.com/scso-ucsc/Incremental-Game-Development/blob/main/src/main.ts#L412 ------------------------
+setInterval(CheckAllUpgradePrices, 0);
+// ----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 DisplayStats();
